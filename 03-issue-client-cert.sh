@@ -21,12 +21,19 @@ CL_O="${TLS_DN_O:-MyOrgName}"
 CL_OU="${TLS_DN_OU:-MyServiceClient}"
 CL_CN="${TLS_CLIENT_COMMON_NAME:-localhost}"
 
+cat <<-EOF > client_config
+[ client_cert ]
+authorityInfoAccess = OCSP;URI:http://localhost:9877/
+EOF
+
 if [ ! -f client.key ]; then
   openssl genrsa -out client.key 2048
 fi
 
 if [ ! -f client.pem ]; then
-  openssl req -sha256 -new -key client.key -out client.csr -nodes -subj "/C=${CL_C}/ST=${CL_ST}/L=${CL_L}/O=${CL_O}/OU=${CL_OU}/CN=${CL_CN}" -addext "basicConstraints=critical,CA:false"
-  openssl x509 -req -CA "${ISSUER_CA}.pem" -CAkey "${ISSUER_CA}.key" -in client.csr -out client.pem -days 3650  -CAcreateserial
+  openssl req -sha256 -new -key client.key -out client.csr -nodes -subj "/C=${CL_C}/ST=${CL_ST}/L=${CL_L}/O=${CL_O}/OU=${CL_OU}/CN=${CL_CN}" -config config -extensions client_cert
+  # openssl x509 -req -CA "${ISSUER_CA}.pem" -CAkey "${ISSUER_CA}.key" -in client.csr -out client.pem -days 3650  -CAcreateserial -extensions client_cert -extfile client_config
+  # openssl x509 -req -CA "${ISSUER_CA}.pem" -CAkey "${ISSUER_CA}.key" -in client.csr -out client.pem -days 3650  -CAcreateserial -extensions client_cert -extfile config
+  openssl ca -notext -batch -out client.pem -config config -extensions client_cert -infiles client.csr
   rm -f client.csr
 fi

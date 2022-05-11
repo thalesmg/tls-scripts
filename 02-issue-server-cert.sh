@@ -51,6 +51,7 @@ CN = $DN_CN
 
 [req_ext]
 subjectAltName = @alt_names
+authorityInfoAccess = OCSP;URI:http://localhost:9877/
 
 [alt_names]
 $SAN_DNS
@@ -77,7 +78,10 @@ email_in_dn    = no
 
 name_opt       = ca_default
 cert_opt       = ca_default
+# copy_extensions = copy
 copy_extensions = none
+
+x509_extensions = srv_cert
 
 [ cert_policy ]
 countryName            = supplied
@@ -86,6 +90,20 @@ organizationName       = supplied
 organizationalUnitName = supplied
 commonName             = supplied
 emailAddress           = optional
+
+[ policy_anything ]
+countryName            = optional
+stateOrProvinceName    = optional
+organizationName       = optional
+organizationalUnitName = optional
+commonName             = supplied
+emailAddress           = optional
+
+[ srv_cert ]
+authorityInfoAccess = OCSP;URI:http://localhost:9877/
+
+[ client_cert ]
+authorityInfoAccess = OCSP;URI:http://localhost:9877/
 EOF
 
 mkdir -p ca
